@@ -19,6 +19,50 @@ template<typename T> T *sdl(T *ptr) {
     return ptr;
 }
 
+constexpr int TILE_SIZE = 64;
+
+constexpr int LEVEL_WIDTH = 5;
+constexpr int LEVEL_HEIGHT = 5;
+
+enum class Tile
+{
+    Empty = 0,
+    Wall
+};
+
+Tile level[LEVEL_HEIGHT][LEVEL_WIDTH] = {
+    {Tile::Empty, Tile::Empty, Tile::Empty, Tile::Empty, Tile::Empty},
+    {Tile::Empty, Tile::Empty, Tile::Empty, Tile::Empty, Tile::Empty},
+    {Tile::Empty, Tile::Empty, Tile::Empty, Tile::Empty, Tile::Empty},
+    {Tile::Wall,  Tile::Wall,  Tile::Wall,  Tile::Empty, Tile::Empty},
+    {Tile::Empty, Tile::Empty, Tile::Empty, Tile::Empty, Tile::Empty}
+};
+
+void render_level(SDL_Renderer *renderer)
+{
+    for (int y = 0; y < LEVEL_HEIGHT; ++y) {
+        for (int x = 0; x < LEVEL_WIDTH; ++x) {
+            switch (level[y][x]) {
+                case Tile::Empty: {
+                } break;
+                case Tile::Wall: {
+                    SDL_Rect rect = {
+                        x * TILE_SIZE,
+                        y * TILE_SIZE,
+                        TILE_SIZE,
+                        TILE_SIZE
+                    };
+
+                    sdl(SDL_SetRenderDrawColor(renderer, 255, 100, 100, 255));
+                    sdl(SDL_RenderFillRect(renderer, &rect));
+
+                } break;
+            }
+        }
+    }
+}
+
+
 
 int main(void)
 {
@@ -62,6 +106,7 @@ int main(void)
         SDL_RenderClear(renderer);
 
         // draw here
+        render_level(renderer);
 
         SDL_RenderPresent(renderer);
     }
