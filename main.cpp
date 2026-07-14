@@ -8,7 +8,7 @@
 #include <cstdlib>
 #include <png.h>
 
-int sdl(int code)
+int sec(int code)
 {
     if (code < 0) {
         fprintf(stderr, "SDL pooped itself: %s\n", SDL_GetError());
@@ -17,7 +17,7 @@ int sdl(int code)
     return code;
 }
 
-template<typename T> T *sdl(T *ptr) {
+template<typename T> T *sec(T *ptr) {
     if (ptr == nullptr) {
         fprintf(stderr, "SDL pooped itself: %s\n", SDL_GetError());
         abort();
@@ -54,7 +54,7 @@ void render_tile_texture(SDL_Renderer *renderer,
                          Tile_Texture texture,
                          SDL_Rect destrect)
 {
-    sdl(SDL_RenderCopy(
+    sec(SDL_RenderCopy(
         renderer,
         texture.texture,
         &texture.srcrect,
@@ -70,7 +70,7 @@ void render_level(SDL_Renderer *renderer, Tile_Texture wall_texture)
                 case Tile::Empty: {
                 } break;
                 case Tile::Wall: {
-                    sdl(SDL_SetRenderDrawColor(renderer, 255, 100, 100, 255));
+                    sec(SDL_SetRenderDrawColor(renderer, 255, 100, 100, 255));
                     render_tile_texture(renderer, wall_texture,
                                     {x * TILE_SIZE, y * TILE_SIZE,
                                      TILE_SIZE, TILE_SIZE});
@@ -99,7 +99,7 @@ SDL_Texture *load_texture_from_png_file(SDL_Renderer *renderer, const char *imag
         fprintf(stderr, "libpng pooped itself: %s\n", image.message);
     }
 
-    SDL_Surface *image_surface = sdl(SDL_CreateRGBSurfaceFrom(
+    SDL_Surface *image_surface = sec(SDL_CreateRGBSurfaceFrom(
         tileset_pixels,
         image.width,
         image.height, 
@@ -111,7 +111,7 @@ SDL_Texture *load_texture_from_png_file(SDL_Renderer *renderer, const char *imag
         0xFF000000
     ));
 
-    SDL_Texture *image_texture = sdl(SDL_CreateTextureFromSurface(renderer, image_surface));
+    SDL_Texture *image_texture = sec(SDL_CreateTextureFromSurface(renderer, image_surface));
     SDL_FreeSurface(image_surface);
 
     return image_texture;
@@ -119,9 +119,9 @@ SDL_Texture *load_texture_from_png_file(SDL_Renderer *renderer, const char *imag
 
 int main(void)
 {
-    sdl(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS));
+    sec(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS));
 
-    SDL_Window *window = sdl(SDL_CreateWindow(
+    SDL_Window *window = sec(SDL_CreateWindow(
         "Something",
         SDL_WINDOWPOS_CENTERED,
         SDL_WINDOWPOS_CENTERED,
@@ -130,7 +130,7 @@ int main(void)
         SDL_WINDOW_SHOWN
     ));
 
-    SDL_Renderer *renderer = sdl(SDL_CreateRenderer(
+    SDL_Renderer *renderer = sec(SDL_CreateRenderer(
         window,
         -1,
         SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC
