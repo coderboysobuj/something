@@ -136,7 +136,7 @@ int main(void)
         SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC
     ));
 
-    // TODO: replace fantasy_tiles.png with our own assets
+    // TODO(#2): replace fantasy_tiles.png with our own assets
     SDL_Texture *tileset_texture = load_texture_from_png_file(renderer, "fantasy_tiles.png");
     Tile_Texture wall_texture = {
         .srcrect = {120, 128, 16, 16},
