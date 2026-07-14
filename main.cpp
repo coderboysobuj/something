@@ -117,6 +117,30 @@ SDL_Texture *load_texture_from_png_file(SDL_Renderer *renderer, const char *imag
     return image_texture;
 }
 
+struct Animat {
+    Sprite *frames;
+    size_t frame_count;
+    size_t frame_current;
+    uint32_t frame_duration;
+    uint32_t frame_cooldown;
+};
+
+static inline 
+void render_animat(SDL_Renderer *renderer, Animat animat, SDL_Rect dstrect)
+{
+    render_sprite(renderer, animat.frames[animat.frame_current % animat.frame_count], dstrect);
+}
+
+void update_animat(Animat *animat, float dt)
+{
+    if (dt < animat->frame_cooldown) {
+        animat->frame_cooldown -= dt;
+    } else {
+        animat->frame_current = (animat->frame_current + 1) % animat->frame_count;
+        animat->frame_cooldown = animat->frame_duration;
+    }
+}
+
 int main(void)
 {
     sec(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS));
@@ -146,9 +170,6 @@ int main(void)
     SDL_Texture *walking_texture = load_texture_from_png_file(renderer, "walking-12px-zoom.png");
     constexpr int walking_frame_size = 48;
     constexpr int walking_frame_count = 4;
-    constexpr int walking_frame_duration = 200;
-
-    int walking_frame_current = 0;
 
     Sprite walking_frames[walking_frame_count];
 
@@ -161,8 +182,17 @@ int main(void)
         };
         walking_frames[i].texture = walking_texture;
     }
+    Animat walking = {};
+    walking.frames = walking_frames;
+    walking.frame_count = 4;
+    walking.frame_duration = 200;
 
-    Uint32 walking_frame_cooldown = walking_frame_duration;
+    Animat idle = {};
+    idle.frames = walking_frames + 2;
+    idle.frame_count = 1;
+    idle.frame_duration = 200;
+    
+    Animat *current = &idle;
 
     int x = 0;
     const Uint8 *keyboard = SDL_GetKeyboardState(NULL);
@@ -182,8 +212,12 @@ int main(void)
 
         if (keyboard[SDL_SCANCODE_D]) {
             x += 1;
+            current = &walking;
         } else if (keyboard[SDL_SCANCODE_A]) {
             x -= 1;
+            current = &walking;
+        } else {
+            current = &idle;
         }
 
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
@@ -191,21 +225,16 @@ int main(void)
 
         // draw here
         render_level(renderer, wall_texture);
-        render_sprite(
+        render_animat(
                 renderer,
-                walking_frames[walking_frame_current], 
+                *current,
                 { x, 4 * TILE_SIZE - walking_frame_size, walking_frame_size, walking_frame_size });
 
 
         SDL_RenderPresent(renderer);
 
         const Uint32 dt = SDL_GetTicks() - begin;
-        if (dt < walking_frame_cooldown) {
-            walking_frame_cooldown -= dt;
-        } else {
-            walking_frame_current = (walking_frame_current + 1)%walking_frame_count;
-            walking_frame_cooldown = walking_frame_duration;
-        }
+        update_animat(current, dt);
     }
 
     SDL_DestroyRenderer(renderer);
