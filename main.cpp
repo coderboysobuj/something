@@ -52,13 +52,17 @@ struct Sprite
 
 void render_sprite(SDL_Renderer *renderer,
                          Sprite texture,
-                         SDL_Rect destrect)
+                         SDL_Rect destrect,
+                         SDL_RendererFlip flip = SDL_FLIP_NONE)
 {
-    sec(SDL_RenderCopy(
+    sec(SDL_RenderCopyEx(
         renderer,
         texture.texture,
         &texture.srcrect,
-        &destrect
+        &destrect,
+        0.0,
+        nullptr,
+        flip
     ));
 }
 
@@ -126,9 +130,9 @@ struct Animat {
 };
 
 static inline 
-void render_animat(SDL_Renderer *renderer, Animat animat, SDL_Rect dstrect)
+void render_animat(SDL_Renderer *renderer, Animat animat, SDL_Rect dstrect, SDL_RendererFlip flip = SDL_FLIP_NONE)
 {
-    render_sprite(renderer, animat.frames[animat.frame_current % animat.frame_count], dstrect);
+    render_sprite(renderer, animat.frames[animat.frame_current % animat.frame_count], dstrect, flip);
 }
 
 void update_animat(Animat *animat, float dt)
@@ -185,7 +189,7 @@ int main(void)
     Animat walking = {};
     walking.frames = walking_frames;
     walking.frame_count = 4;
-    walking.frame_duration = 200;
+    walking.frame_duration = 100;
 
     Animat idle = {};
     idle.frames = walking_frames + 2;
@@ -196,6 +200,7 @@ int main(void)
 
     int x = 0;
     const Uint8 *keyboard = SDL_GetKeyboardState(NULL);
+    SDL_RendererFlip player_dir = SDL_FLIP_NONE;
     bool quit = false;
 
     while (!quit) {
@@ -210,12 +215,16 @@ int main(void)
             }
         }
 
+        constexpr int PLAYER_SPEED = 2;
+
         if (keyboard[SDL_SCANCODE_D]) {
-            x += 1;
+            x += PLAYER_SPEED;
             current = &walking;
+            player_dir = SDL_FLIP_HORIZONTAL;
         } else if (keyboard[SDL_SCANCODE_A]) {
-            x -= 1;
+            x -= PLAYER_SPEED;
             current = &walking;
+            player_dir = SDL_FLIP_NONE;
         } else {
             current = &idle;
         }
@@ -228,7 +237,8 @@ int main(void)
         render_animat(
                 renderer,
                 *current,
-                { x, 4 * TILE_SIZE - walking_frame_size, walking_frame_size, walking_frame_size });
+                { x, 4 * TILE_SIZE - walking_frame_size, walking_frame_size, walking_frame_size },
+                player_dir);
 
 
         SDL_RenderPresent(renderer);
